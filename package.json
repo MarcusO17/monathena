@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "tsx source/app.tsx"
+    "start": "tsx src/app.tsx"
   },
   "repository": {
     "type": "git",
