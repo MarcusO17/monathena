@@ -1,24 +1,16 @@
 import React, { useState } from 'react';
-import { render, Box, Text, useInput, useApp } from 'ink';
+import { render } from 'ink';
+import HomeScreen from './screens/HomeScreen.js';
+import ExcelInputScreen from './screens/ExcelInputScreen.js';
 
 function App() {
-  const { exit } = useApp();
-  const [count, setCount] = useState(0);
+  const [screen, setScreen] = useState('home');
 
-  useInput((input, key) => {
-    if (input === 'q') exit();
-    if (key.upArrow)   setCount(c => c + 1);
-    if (key.downArrow) setCount(c => c - 1);
-  });
+  if (screen === 'home') return <HomeScreen onNavigate={setScreen} />;
+  if (screen === 'excel') return <ExcelInputScreen onNavigate={setScreen} />;
 
-  return (
-    <Box flexDirection="column" padding={1}>
-      <Text bold color="cyan">🎛  My First TUI</Text>
-      <Text> </Text>
-      <Text>Counter: <Text color="green">{count}</Text></Text>
-      <Text dimColor>↑/↓ to change • q to quit</Text>
-    </Box>
-  );
+  // placeholder — replace with real screens later
+  return <HomeScreen onNavigate={setScreen} />;
 }
 
 render(<App />);
