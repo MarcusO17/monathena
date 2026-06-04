@@ -1,0 +1,26 @@
+{
+  "name": "monathena",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "tsx source/app.tsx"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MarcusO17/monathena.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MarcusO17/monathena/issues"
+  },
+  "homepage": "https://github.com/MarcusO17/monathena#readme",
+  "description": "",
+  "dependencies": {
+    "ink": "^7.0.5",
+    "react": "^19.2.7"
+  }
+}
