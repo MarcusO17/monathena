@@ -1,21 +1,48 @@
 # Dependencies
 node_modules/
 
-# Build output
+# Build & TypeScript
 dist/
 build/
-
-# TypeScript
 *.tsbuildinfo
 
-# Environment
+# Environment & Secrets
 .env
-.env.local
+.env.*
+!.env.example
+.pi/agent/auth.json
 
-# OS
+# Pi Coding Agent Sessions & Binaries
+.pi/agent/sessions/
+.pi/agent/bin/
+.pi/**/sessions/
+.pi/**/bin/
+
+# Excel & Temporary Office Lock Files
+~$*.xlsx
+~$*.xls
+~$*.csv
+excel_data/*.xlsx
+excel_data/*.xls
+*.tmp
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+
+# Operating System & IDE
 .DS_Store
 Thumbs.db
+.idea/
+.vscode/
+*.swp
 
 # Logs
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

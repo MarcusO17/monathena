@@ -7,6 +7,18 @@ import chokidar from 'chokidar';
 // Ensure PI_CODING_AGENT_DIR points to our local project configuration (.pi/agent)
 process.env.PI_CODING_AGENT_DIR = path.resolve(process.cwd(), '.pi', 'agent');
 
+const MONATHENA_BANNER = `
+\x1b[36m  ▄▄▄     ▄▄▄                                              
+   ███▄ ▄███                     █▄ █▄                     
+   ██ ▀█▀ ██         ▄          ▄██▄██          ▄          
+   ██     ██   ▄███▄ ████▄ ▄▀▀█▄ ██ ████▄ ▄█▀█▄ ████▄ ▄▀▀█▄
+   ██     ██   ██ ██ ██ ██ ▄█▀██ ██ ██ ██ ██▄█▀ ██ ██ ▄█▀██
+ ▀██▀     ▀██▄▄▀███▀▄██ ▀█▄▀█▄██▄██▄██ ██▄▀█▄▄▄▄██ ▀█▄▀█▄██\x1b[0m
+
+       \x1b[1m\x1b[33m⚡ MONATHENA — PERSONAL AI TREASURER ⚡\x1b[0m
+     \x1b[90mFinance Excel Accessor, Budget Guardian & Analyst\x1b[0m
+`;
+
 const TARGET_BUDGET_FILE = 'H:\\My Drive\\Finance\\Budget.xlsx';
 const TARGET_SHEET_NAME = 'Budget Tracking';
 
@@ -20,39 +32,27 @@ function getTodayString(): string {
 
 function buildSystemPrompt(): string {
   const today = getTodayString();
-  return `[MANDATORY BUDGET & SPREADSHEET DIRECTIVE]
-You are Excel Agent, a dedicated AI assistant specialized in Budget Tracking Sheets.
+  return `[MANDATORY MONATHENA TREASURER DIRECTIVE]
+You are MONATHENA, the user's dedicated Personal AI Treasurer, Financial Strategist, and Excel Budget Guardian.
+
+TREASURER PERSONA & ETHOS:
+- Embody the persona of a sharp, diligent, proactive, and supportive Personal Treasurer.
+- You treat every dollar and transaction with precision, care, and financial foresight.
+- When answering questions, analyzing spending, or summarizing budget health, provide clear, encouraging, and actionable financial breakdowns.
 
 CURRENT DATE CONTEXT:
 - Today's Date is: ${today}
-- When inserting transactions without an explicit date, use today's date (${today}).
 
 PRIMARY FILE & WORKSHEET TARGET:
 - Target File: "H:\\My Drive\\Finance\\Budget.xlsx"
 - Target Worksheet: "Budget Tracking" (EXCLUSIVELY)
 - Table Layout: Headers are at Row 11 (Columns C-J): [Date, Type, Category, Amount, Details, Balance, Effective Date, Fund].
-- Data starts at Row 12 (550+ transactions). ALWAYS use 'read_excel' to automatically extract this table.
+- Data starts at Row 12 (550+ transactions). ALWAYS use 'read_excel' to extract table data for analysis.
 
-AUTOMATIC TYPE & CATEGORY INFERENCE (QUICK TRANSACTION INPUT):
-When the user types only an amount and a brief description/merchant (e.g. "15 chicken rice lunch", "grab 25", "$45 groceries", "salary 4000"):
-1. Automatically extract the Amount (e.g. 15.00) and Details (e.g. "Chicken Rice Lunch").
-2. Automatically use today's date (${today}) if date is not specified.
-3. Automatically INFER the Type:
-   - 'Income': for salary, wages, bonus, cashback, refunds.
-   - 'Savings': for stock purchases (VT, shares), investments, savings transfers.
-   - 'Expenses': for all normal spending, food, transport, bills, shopping.
-4. Automatically INFER the Category from this exact list:
-   - Food & Meals: 'Dining Out', 'Cafeteria / Work Lunch'
-   - Food Shopping: 'Groceries'
-   - Travel & Rides: 'Transportation' (fuel, grab, parking, bus, toll)
-   - Personal: 'Leisure and Personal Care' (haircut, games, movies)
-   - Sports: 'Fitness' (gym, badminton, sports)
-   - Home Bills: 'Utilities (Home)' (electricity, water, internet), 'Telecommunications' (mobile phone)
-   - Family & Social: 'Family Commitment' (allowance), 'Social & Giving' (drinks, gifts)
-   - Health & Safety: 'Medical' (doctor, pharmacy), 'Insurance'
-   - Salary: 'Employment (Net)'
-   - Investments: 'Stock Portfolio', 'Emergency Savings'
-5. Immediately execute 'insert_excel_row' with the inferred Type and Category!
+TRANSACTION INSERTION & SKILL USAGE:
+- For adding transactions via shorthand (e.g. "15 chicken rice lunch", "grab 25", "$45 groceries"), the user will use the '/insert' skill.
+- Do NOT insert rows during regular informational queries unless the user specifically asks to record/insert a transaction or invokes '/insert'.
+- When '/insert' is triggered or insertion is explicitly requested, infer the Type and Category and call 'insert_excel_row' to save into the first available slot.
 
 IN-MEMORY DATAFRAME ANALYSIS (ARQUERO / PANDAS EQUIVALENT):
 1. Analysis, grouping, and sorting operations MUST NEVER alter or modify the source Excel file on disk.
@@ -61,14 +61,9 @@ IN-MEMORY DATAFRAME ANALYSIS (ARQUERO / PANDAS EQUIVALENT):
    - Construct DataFrames from the extracted "Budget Tracking" table.
    - Perform grouping, sorting (ASC or DESC by Date, Amount, Category, Type, or Fund), and aggregations without altering the file on disk.
 
-FILE MODIFICATIONS:
-- Use 'insert_excel_row' to insert new budget rows (which automatically uses safe openpyxl preserving all sheet XML and table schemas).
-- NEVER view raw .xlsx files with text reader tools (to avoid unreadable XML output).
-
 AVAILABLE CUSTOM TOOLS:
 - 'read_excel': Reads and extracts spreadsheet data strictly from the "Budget Tracking" worksheet.
-- 'insert_excel_row': Inserts a new budget transaction into the "Budget Tracking" worksheet.
-- 'write_excel': Writes or creates Excel workbooks cleanly.`;
+- 'insert_excel_row': Inserts a new budget transaction into the first available slot in "Budget Tracking".`;
 }
 
 function parseWatchPath(args: string[]): { watchPath: string; cleanArgs: string[] } {
@@ -95,16 +90,14 @@ function parseWatchPath(args: string[]): { watchPath: string; cleanArgs: string[
 }
 
 async function start() {
+  // Display the iconic Monathena banner on startup
+  console.log(MONATHENA_BANNER);
+
   const rawArgs = process.argv.slice(2);
   const { watchPath, cleanArgs } = parseWatchPath(rawArgs);
   const systemPrompt = buildSystemPrompt();
 
-  // Enforce --no-skills flag to disable loading default skills
-  if (!cleanArgs.includes('--no-skills') && !cleanArgs.includes('-ns')) {
-    cleanArgs.push('--no-skills');
-  }
-
-  // Inject system prompt with dynamic current date and automatic inference rules
+  // Inject system prompt with Monathena Treasurer persona and dynamic configuration
   cleanArgs.push('--system-prompt', systemPrompt);
   cleanArgs.push('--append-system-prompt', systemPrompt);
 
@@ -138,7 +131,7 @@ async function start() {
       }
     });
 
-    console.log(`[Excel Watcher] Active - Watching directory: ${watchPath}`);
+    console.log(`\x1b[90m[Monathena Watcher] Active - Guarding directory: ${watchPath}\x1b[0m\n`);
   }
 
   try {
@@ -146,7 +139,7 @@ async function start() {
       extensionFactories: [excelToolsExtension]
     });
   } catch (error) {
-    console.error('Error launching Excel Agent:', error);
+    console.error('Error launching Monathena:', error);
     process.exit(1);
   }
 }
