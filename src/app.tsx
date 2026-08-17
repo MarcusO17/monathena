@@ -1,16 +1,23 @@
-import React, { useState } from 'react';
-import { render } from 'ink';
-import HomeScreen from './screens/HomeScreen.js';
-import ExcelInputScreen from './screens/ExcelInputScreen.js';
+import path from 'path';
+import { main } from '@earendil-works/pi-coding-agent';
 
-function App() {
-  const [screen, setScreen] = useState('home');
+// Ensure PI_CODING_AGENT_DIR points to our local project configuration (.pi/agent)
+process.env.PI_CODING_AGENT_DIR = path.resolve(process.cwd(), '.pi', 'agent');
 
-  if (screen === 'home') return <HomeScreen onNavigate={setScreen} />;
-  if (screen === 'excel') return <ExcelInputScreen onNavigate={setScreen} />;
+async function start() {
+  const args = process.argv.slice(2);
+  
+  // Enforce --no-skills flag to disable loading skills
+  if (!args.includes('--no-skills') && !args.includes('-ns')) {
+    args.push('--no-skills');
+  }
 
-  // placeholder — replace with real screens later
-  return <HomeScreen onNavigate={setScreen} />;
+  try {
+    await main(args);
+  } catch (error) {
+    console.error('Error launching Pi agent:', error);
+    process.exit(1);
+  }
 }
 
-render(<App />);
+start();
