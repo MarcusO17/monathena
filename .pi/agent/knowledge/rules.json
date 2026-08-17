@@ -1,0 +1,23 @@
+{
+  "currency": "MYR",
+  "budgetMethod": "50/30/20",
+  "needsCategories": [
+    "Groceries",
+    "Housing",
+    "Utilities (Home)",
+    "Transportation",
+    "Insurance",
+    "Medical"
+  ],
+  "wantsCategories": [
+    "Dining Out",
+    "Leisure and Personal Care",
+    "Fitness",
+    "Social & Giving"
+  ],
+  "savingsCategories": [
+    "Stock Portfolio",
+    "Emergency Savings",
+    "Sinking Fund"
+  ]
+}

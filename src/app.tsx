@@ -7,6 +7,7 @@ import skillAndKnowledgeExtension from './extensions/skill-and-knowledge-tools.j
 import { ensureGoogleDriveMounted } from './services/drive-launcher.js';
 import { ensureOllamaRunning } from './services/ollama-launcher.js';
 import { getDomainKnowledgeSummary } from './services/knowledge-store.js';
+import { playMonathenaIntroAnimation } from './services/terminal-animations.js';
 import chokidar from 'chokidar';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -16,17 +17,8 @@ const PACKAGE_ROOT = path.resolve(__dirname, '..');
 // Ensure PI_CODING_AGENT_DIR points to our project configuration (.pi/agent)
 process.env.PI_CODING_AGENT_DIR = path.resolve(PACKAGE_ROOT, '.pi', 'agent');
 
-const MONATHENA_BANNER = `
-\x1b[36m  ▄▄▄     ▄▄▄                                              
-   ███▄ ▄███                     █▄ █▄                     
-   ██ ▀█▀ ██         ▄          ▄██▄██          ▄          
-   ██     ██   ▄███▄ ████▄ ▄▀▀█▄ ██ ████▄ ▄█▀█▄ ████▄ ▄▀▀█▄
-   ██     ██   ██ ██ ██ ██ ▄█▀██ ██ ██ ██ ██▄█▀ ██ ██ ▄█▀██
- ▀██▀     ▀██▄▄▀███▀▄██ ▀█▄▀█▄██▄██▄██ ██▄▀█▄▄▄▄██ ▀█▄▀█▄██\x1b[0m
-
-       \x1b[1m\x1b[33m⚡ MONATHENA — PERSONAL AI TREASURER ⚡\x1b[0m
-     \x1b[90mFinance Excel Accessor, Budget Guardian & Analyst\x1b[0m
-`;
+const TARGET_BUDGET_FILE = 'H:\\My Drive\\Finance\\Budget.xlsx';
+const TARGET_SHEET_NAME = 'Budget Tracking';
 
 function getTodayString(): string {
   const now = new Date();
@@ -40,13 +32,26 @@ function buildSystemPrompt(): string {
   const today = getTodayString();
   const domainKnowledge = getDomainKnowledgeSummary();
 
-  return `[MANDATORY MONATHENA TREASURER DIRECTIVE]
-You are MONATHENA, the user's dedicated Personal AI Treasurer, Financial Strategist, and Excel Budget Guardian.
+  return `[MONATHENA EXECUTIVE FINANCIAL DIRECTIVE]
+You are MONATHENA, the user's elite Personal AI Treasurer, Chief Financial Strategist, and Spreadsheet Guardian.
 
-TREASURER PERSONA & ETHOS:
-- Embody the persona of a sharp, diligent, proactive, and supportive Personal Treasurer.
-- You treat every dollar and transaction with precision, care, and financial foresight.
-- When answering questions, analyzing spending, or summarizing budget health, provide clear, encouraging, and actionable financial breakdowns.
+COMMUNICATION ETHOS & REPORTING STANDARDS:
+- Tone: Crisp, authoritative, highly polished, and encouraging — resembling a senior Private Wealth Treasurer or CFO.
+- NO Generic AI Fluff: NEVER use filler intros like "As an AI...", "Sure, here is your summary...", or "I have processed your request." Jump straight into high-impact financial data.
+- Executive Formatting: Present financial data with elegant box-drawing headliners, clean Markdown tables, and structured advisory sections:
+  Example Format:
+  ### 🏛️ Executive Cashflow Summary
+  - **Gross Inflows**: $X,XXX.XX
+  - **Operating Outflows**: $X,XXX.XX
+  - **Net Capital Position**: +$XXX.XX (Savings Rate: XX.X%)
+
+  | Date | Type | Category | Amount | Details | Balance |
+  | :--- | :--- | :--- | :--- | :--- | :--- |
+  | ... | ... | ... | ... | ... | ... |
+
+  ### 💡 Strategic Advisory
+  * [Key observation on discretionary spend vs fixed commitments]
+  * [Actionable cashflow optimization note]
 
 CURRENT DATE CONTEXT:
 - Today's Date is: ${today}
@@ -64,7 +69,7 @@ DYNAMIC KNOWLEDGE & SELF-LEARNING CAPABILITIES:
 ${domainKnowledge}
 
 TRANSACTION INSERTION & SKILL USAGE:
-- For adding transactions via shorthand (e.g. "15 chicken rice lunch", "grab 25", "$45 groceries"), the user will use the '/insert' skill.
+- For adding transactions via shorthand (e.g. "15 chicken rice lunch", "grab 25", "$45 groceries"), the bundled '/insert' skill is used.
 - Do NOT insert rows during regular informational queries unless the user specifically asks to record/insert a transaction or invokes '/insert'.
 - When '/insert' is triggered or insertion is explicitly requested, infer the Type and Category and call 'insert_excel_row' to save into the first available slot.
 
@@ -107,8 +112,8 @@ function parseWatchPath(args: string[]): { watchPath: string; cleanArgs: string[
 }
 
 export async function runMonathenaCLI() {
-  // Display the iconic Monathena banner on startup
-  console.log(MONATHENA_BANNER);
+  // Play luxury animated money & vault intro
+  await playMonathenaIntroAnimation();
 
   // Concurrently verify and launch Google Drive & Ollama server
   await Promise.all([
@@ -120,7 +125,13 @@ export async function runMonathenaCLI() {
   const { watchPath, cleanArgs } = parseWatchPath(rawArgs);
   const systemPrompt = buildSystemPrompt();
 
-  // Inject system prompt with Monathena Treasurer persona and dynamic configuration
+  // Explicitly bundle the internal /insert skill from package root
+  const bundledInsertSkill = path.resolve(PACKAGE_ROOT, '.pi', 'agent', 'skills', 'insert', 'SKILL.md');
+  if (fs.existsSync(bundledInsertSkill)) {
+    cleanArgs.push('--skill', bundledInsertSkill);
+  }
+
+  // Inject system prompt with Executive Treasurer persona and dynamic configuration
   cleanArgs.push('--system-prompt', systemPrompt);
   cleanArgs.push('--append-system-prompt', systemPrompt);
 

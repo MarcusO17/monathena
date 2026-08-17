@@ -1,0 +1,26 @@
+{
+  "Keysight": {
+    "category": "Employment (Net)",
+    "type": "Income"
+  },
+  "Zus": {
+    "category": "Dining Out",
+    "type": "Expenses"
+  },
+  "Starbucks": {
+    "category": "Dining Out",
+    "type": "Expenses"
+  },
+  "Shopee": {
+    "category": "Leisure and Personal Care",
+    "type": "Expenses"
+  },
+  "Seven Star": {
+    "category": "Fitness",
+    "type": "Expenses"
+  },
+  "Rong Trading": {
+    "category": "Groceries",
+    "type": "Expenses"
+  }
+}
