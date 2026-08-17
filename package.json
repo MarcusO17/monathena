@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "tsx src/app.tsx",
-    "pi": "tsx src/app.tsx"
+    "pi": "tsx src/app.tsx",
+    "watch": "tsx src/app.tsx --watch"
   },
   "repository": {
     "type": "git",
@@ -21,6 +22,9 @@
   "homepage": "https://github.com/MarcusO17/monathena#readme",
   "description": "",
   "dependencies": {
+    "arquero": "^8.0.3",
+    "chokidar": "^5.0.0",
+    "exceljs": "^4.4.0",
     "googleapis": "^173.0.0",
     "ink": "^7.0.5",
     "ink-text-input": "^6.0.0",
