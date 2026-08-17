@@ -1,12 +1,17 @@
 import ExcelJS from 'exceljs';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 import { Type } from '@earendil-works/pi-ai';
 import { defineTool, type ExtensionAPI } from '@earendil-works/pi-coding-agent';
 
 const execFileAsync = promisify(execFile);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const PACKAGE_ROOT = path.resolve(__dirname, '..', '..');
+
 const DEFAULT_BUDGET_PATH = 'H:\\My Drive\\Finance\\Budget.xlsx';
 const DEFAULT_BUDGET_SHEET = 'Budget Tracking';
 
@@ -241,7 +246,7 @@ export const insertExcelRowTool = defineTool({
       };
     }
 
-    const ps1Path = path.resolve(process.cwd(), 'scripts', 'insert_row.ps1');
+    const ps1Path = path.resolve(PACKAGE_ROOT, 'scripts', 'insert_row.ps1');
     const todayIso = new Date().toISOString().split('T')[0];
     const amountVal = typeof params.amount === 'string' ? parseFloat(params.amount) : (params.amount ?? 0);
     const payloadObj = {

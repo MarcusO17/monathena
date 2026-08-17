@@ -1,11 +1,18 @@
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 import { main } from '@earendil-works/pi-coding-agent';
 import excelToolsExtension from './extensions/excel-tools.js';
+import { ensureGoogleDriveMounted } from './services/drive-launcher.js';
+import { ensureOllamaRunning } from './services/ollama-launcher.js';
 import chokidar from 'chokidar';
 
-// Ensure PI_CODING_AGENT_DIR points to our local project configuration (.pi/agent)
-process.env.PI_CODING_AGENT_DIR = path.resolve(process.cwd(), '.pi', 'agent');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const PACKAGE_ROOT = path.resolve(__dirname, '..');
+
+// Ensure PI_CODING_AGENT_DIR points to our project configuration (.pi/agent)
+process.env.PI_CODING_AGENT_DIR = path.resolve(PACKAGE_ROOT, '.pi', 'agent');
 
 const MONATHENA_BANNER = `
 \x1b[36m  ▄▄▄     ▄▄▄                                              
@@ -69,7 +76,7 @@ AVAILABLE CUSTOM TOOLS:
 function parseWatchPath(args: string[]): { watchPath: string; cleanArgs: string[] } {
   let defaultWatch = 'H:\\My Drive\\Finance';
   if (!fs.existsSync(defaultWatch)) {
-    defaultWatch = path.resolve(process.cwd(), 'excel_data');
+    defaultWatch = path.resolve(PACKAGE_ROOT, 'excel_data');
   }
 
   let watchPath: string = process.env.WATCH_PATH || defaultWatch;
@@ -89,9 +96,15 @@ function parseWatchPath(args: string[]): { watchPath: string; cleanArgs: string[
   return { watchPath, cleanArgs };
 }
 
-async function start() {
+export async function runMonathenaCLI() {
   // Display the iconic Monathena banner on startup
   console.log(MONATHENA_BANNER);
+
+  // 1. Concurrently verify and launch Google Drive & Ollama server
+  await Promise.all([
+    ensureGoogleDriveMounted('H:\\My Drive'),
+    ensureOllamaRunning()
+  ]);
 
   const rawArgs = process.argv.slice(2);
   const { watchPath, cleanArgs } = parseWatchPath(rawArgs);
@@ -144,4 +157,5 @@ async function start() {
   }
 }
 
-start();
+// Auto-run when executed directly
+runMonathenaCLI();
