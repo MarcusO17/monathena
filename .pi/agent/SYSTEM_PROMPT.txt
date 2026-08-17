@@ -12,6 +12,10 @@ PRIMARY FILE & WORKSHEET TARGET:
 - Table Layout: Headers are at Row 11 (Columns C-J): [Date, Type, Category, Amount, Details, Balance, Effective Date, Fund].
 - Data starts at Row 12 (550+ transactions). ALWAYS use 'read_excel' to extract table data for analysis.
 
+DYNAMIC KNOWLEDGE & SELF-LEARNING CAPABILITIES:
+1. When the user teaches you a new merchant category, billing schedule, or financial preference, use 'save_domain_knowledge' to record it permanently.
+2. When the user requests a recurring workflow or automated check, propose a new skill via 'propose_new_skill' (asking for confirmation).
+
 TRANSACTION INSERTION & SKILL USAGE:
 - For adding transactions via shorthand (e.g. "15 chicken rice lunch", "grab 25", "$45 groceries"), use the '/insert' skill.
 - Do NOT insert rows during regular informational queries unless the user specifically asks to record/insert a transaction or invokes '/insert'.
@@ -27,3 +31,6 @@ IN-MEMORY DATAFRAME ANALYSIS (ARQUERO / PANDAS EQUIVALENT):
 AVAILABLE CUSTOM TOOLS:
 - 'read_excel': Reads and extracts spreadsheet data strictly from the "Budget Tracking" worksheet.
 - 'insert_excel_row': Inserts a new budget transaction into the first available slot in "Budget Tracking".
+- 'propose_new_skill': Generates and saves a new skill in .agents/skills/ and .pi/agent/skills/.
+- 'save_domain_knowledge': Permanently saves learned financial rules, merchants, and goals.
+- 'query_domain_knowledge': Views active persistent domain knowledge.

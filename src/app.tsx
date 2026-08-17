@@ -3,8 +3,10 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { main } from '@earendil-works/pi-coding-agent';
 import excelToolsExtension from './extensions/excel-tools.js';
+import skillAndKnowledgeExtension from './extensions/skill-and-knowledge-tools.js';
 import { ensureGoogleDriveMounted } from './services/drive-launcher.js';
 import { ensureOllamaRunning } from './services/ollama-launcher.js';
+import { getDomainKnowledgeSummary } from './services/knowledge-store.js';
 import chokidar from 'chokidar';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -26,9 +28,6 @@ const MONATHENA_BANNER = `
      \x1b[90mFinance Excel Accessor, Budget Guardian & Analyst\x1b[0m
 `;
 
-const TARGET_BUDGET_FILE = 'H:\\My Drive\\Finance\\Budget.xlsx';
-const TARGET_SHEET_NAME = 'Budget Tracking';
-
 function getTodayString(): string {
   const now = new Date();
   const year = now.getFullYear();
@@ -39,6 +38,8 @@ function getTodayString(): string {
 
 function buildSystemPrompt(): string {
   const today = getTodayString();
+  const domainKnowledge = getDomainKnowledgeSummary();
+
   return `[MANDATORY MONATHENA TREASURER DIRECTIVE]
 You are MONATHENA, the user's dedicated Personal AI Treasurer, Financial Strategist, and Excel Budget Guardian.
 
@@ -56,6 +57,12 @@ PRIMARY FILE & WORKSHEET TARGET:
 - Table Layout: Headers are at Row 11 (Columns C-J): [Date, Type, Category, Amount, Details, Balance, Effective Date, Fund].
 - Data starts at Row 12 (550+ transactions). ALWAYS use 'read_excel' to extract table data for analysis.
 
+DYNAMIC KNOWLEDGE & SELF-LEARNING CAPABILITIES:
+1. When the user teaches you a new merchant category, billing schedule, or financial preference, use 'save_domain_knowledge' to record it permanently.
+2. When the user requests a recurring workflow or automated check, propose a new skill via 'propose_new_skill' (asking for confirmation).
+3. The following active domain knowledge has been learned and injected:
+${domainKnowledge}
+
 TRANSACTION INSERTION & SKILL USAGE:
 - For adding transactions via shorthand (e.g. "15 chicken rice lunch", "grab 25", "$45 groceries"), the user will use the '/insert' skill.
 - Do NOT insert rows during regular informational queries unless the user specifically asks to record/insert a transaction or invokes '/insert'.
@@ -70,7 +77,10 @@ IN-MEMORY DATAFRAME ANALYSIS (ARQUERO / PANDAS EQUIVALENT):
 
 AVAILABLE CUSTOM TOOLS:
 - 'read_excel': Reads and extracts spreadsheet data strictly from the "Budget Tracking" worksheet.
-- 'insert_excel_row': Inserts a new budget transaction into the first available slot in "Budget Tracking".`;
+- 'insert_excel_row': Inserts a new budget transaction into the first available slot in "Budget Tracking".
+- 'propose_new_skill': Generates and saves a new skill in .agents/skills/ and .pi/agent/skills/.
+- 'save_domain_knowledge': Permanently saves learned financial rules, merchants, and goals.
+- 'query_domain_knowledge': Views active persistent domain knowledge.`;
 }
 
 function parseWatchPath(args: string[]): { watchPath: string; cleanArgs: string[] } {
@@ -100,7 +110,7 @@ export async function runMonathenaCLI() {
   // Display the iconic Monathena banner on startup
   console.log(MONATHENA_BANNER);
 
-  // 1. Concurrently verify and launch Google Drive & Ollama server
+  // Concurrently verify and launch Google Drive & Ollama server
   await Promise.all([
     ensureGoogleDriveMounted('H:\\My Drive'),
     ensureOllamaRunning()
@@ -149,7 +159,7 @@ export async function runMonathenaCLI() {
 
   try {
     await main(cleanArgs, {
-      extensionFactories: [excelToolsExtension]
+      extensionFactories: [excelToolsExtension, skillAndKnowledgeExtension]
     });
   } catch (error) {
     console.error('Error launching Monathena:', error);
