@@ -6,6 +6,7 @@ import { execFile } from 'child_process';
 import { promisify } from 'util';
 import { Type } from '@earendil-works/pi-ai';
 import { defineTool, type ExtensionAPI } from '@earendil-works/pi-coding-agent';
+import { generateHorizontalBarChart, generateCashflowMeter } from '../services/chart-generator.js';
 
 const execFileAsync = promisify(execFile);
 const __filename = fileURLToPath(import.meta.url);
@@ -95,7 +96,7 @@ function detectBudgetHeader(sheet: ExcelJS.Worksheet): TableHeaderInfo {
 export const readExcelTool = defineTool({
   name: 'read_excel',
   label: 'Read Budget Tracking Table',
-  description: 'Accurately extracts and parses the Budget Tracking table from H:\\My Drive\\Finance\\Budget.xlsx into structured clean rows and statistics without mutating the file.',
+  description: 'Accurately extracts and parses the Budget Tracking table from H:\\My Drive\\Finance\\Budget.xlsx into structured clean rows, category breakdowns, and embedded TUI visual graphs.',
   parameters: Type.Object({
     filePath: Type.Optional(Type.String({ description: 'Path to Excel file (defaults to H:\\My Drive\\Finance\\Budget.xlsx)' })),
     sheetName: Type.Optional(Type.String({ description: 'Worksheet name (defaults to Budget Tracking)' })),
@@ -133,6 +134,7 @@ export const readExcelTool = defineTool({
 
       const { headerRowIndex, startColIndex, headers } = detectBudgetHeader(sheet);
       const allRows: any[][] = [];
+      const categoryTotals: Record<string, number> = {};
       let totalIncome = 0;
       let totalExpense = 0;
 
@@ -166,6 +168,9 @@ export const readExcelTool = defineTool({
           totalIncome += amountVal;
         } else if (typeStr.toLowerCase().includes('expense')) {
           totalExpense += amountVal;
+          if (categoryStr) {
+            categoryTotals[categoryStr] = (categoryTotals[categoryStr] || 0) + amountVal;
+          }
         }
 
         allRows.push([
@@ -184,20 +189,33 @@ export const readExcelTool = defineTool({
       const displayLimit = params.limit || 150;
       const displayedRows = allRows.slice(Math.max(0, allRows.length - displayLimit));
 
-      let md = `### Budget Tracking Table Overview\n`;
-      md += `- **Source**: \`${path.basename(resolvedPath)}\` (Sheet: \`${sheet.name}\`)\n`;
-      md += `- **Total Recorded Transactions**: **${totalEntries} rows**\n`;
-      md += `- **Total Tracked Income**: **$${totalIncome.toFixed(2)}** | **Total Tracked Expenses**: **$${totalExpense.toFixed(2)}**\n`;
-      md += `- **Table Headers (Row ${headerRowIndex}, Col ${startColIndex})**: \`${headers.join(' | ')}\`\n\n`;
+      // Top categories chart data
+      const topCategories = Object.entries(categoryTotals)
+        .map(([label, value]) => ({ label, value }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 8);
 
+      const barChart = generateHorizontalBarChart(topCategories);
+      const cashflowChart = generateCashflowMeter(totalIncome, totalExpense);
+
+      let md = `### 🏛️ Executive Budget Overview & Financial Health\n`;
+      md += `- **Workbook Source**: \`${path.basename(resolvedPath)}\` (Sheet: \`${sheet.name}\`)\n`;
+      md += `- **Active Transactions**: **${totalEntries} recorded rows**\n`;
+      md += `- **Total Inflows**: **$${totalIncome.toFixed(2)}** | **Total Outflows**: **$${totalExpense.toFixed(2)}**\n`;
+      md += `- **Net Capital Buffer**: **$${(totalIncome - totalExpense).toFixed(2)}**\n\n`;
+
+      md += `#### 📊 Major Expense Allocations\n${barChart}\n\n`;
+      md += `#### ⚖️ Inflow vs Outflow Balance\n${cashflowChart}\n\n`;
+
+      md += `#### 📋 Transaction Ledger (Recent Entries)\n`;
       md += `| Date | Type | Category | Amount | Details | Balance | Effective Date | Fund |\n`;
-      md += `| --- | --- | --- | --- | --- | --- | --- | --- |\n`;
+      md += `| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n`;
       for (const row of displayedRows) {
         md += `| ${row.join(' | ')} |\n`;
       }
 
       if (totalEntries > displayLimit) {
-        md += `\n*Note: Showing the ${displayedRows.length} most recent entries out of ${totalEntries} total rows.*\n`;
+        md += `\n*Note: Displaying the ${displayedRows.length} most recent transactions out of ${totalEntries} total records.*\n`;
       }
 
       return {
@@ -209,6 +227,7 @@ export const readExcelTool = defineTool({
           totalRows: totalEntries,
           totalIncome,
           totalExpense,
+          categoryTotals,
           sampleRows: displayedRows
         }
       };
@@ -282,7 +301,7 @@ export const insertExcelRowTool = defineTool({
       }
 
       return {
-        content: [{ type: 'text', text: `Successfully inserted new budget transaction into row ${res.row} of "Budget Tracking":\n- **Date**: ${res.date}\n- **Type**: ${res.type}\n- **Category**: ${res.category}\n- **Amount**: $${res.amount}\n- **Details**: ${res.details}${res.fund ? `\n- **Fund**: ${res.fund}` : ''}` }],
+        content: [{ type: 'text', text: `Successfully recorded budget transaction into slot ${res.row} of "Budget Tracking":\n- **Date**: ${res.date}\n- **Type**: ${res.type}\n- **Category**: ${res.category}\n- **Amount**: $${res.amount}\n- **Details**: ${res.details}${res.fund ? `\n- **Fund**: ${res.fund}` : ''}` }],
         details: res
       };
     } catch (err: any) {

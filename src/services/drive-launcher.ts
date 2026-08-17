@@ -7,8 +7,6 @@ export async function ensureGoogleDriveMounted(targetPath: string = 'H:\\My Driv
     return true;
   }
 
-  console.log(`\x1b[36m[Google Drive] Drive not mounted at ${targetPath}. Launching Google Drive...\x1b[0m`);
-
   const searchRoots = [
     'C:\\Program Files\\Google\\Drive File Stream',
     'C:\\Program Files\\Google\\Drive',
@@ -46,9 +44,7 @@ export async function ensureGoogleDriveMounted(targetPath: string = 'H:\\My Driv
         stdio: 'ignore'
       });
       subprocess.unref();
-    } catch (err: any) {
-      console.warn(`\x1b[33m[Google Drive] Failed to launch ${driveExe}: ${err.message}\x1b[0m`);
-    }
+    } catch {}
   } else {
     try {
       exec('start "" "GoogleDriveFS.exe"', () => {});
@@ -59,15 +55,9 @@ export async function ensureGoogleDriveMounted(targetPath: string = 'H:\\My Driv
   for (let i = 0; i < 20; i++) {
     await new Promise((r) => setTimeout(r, 500));
     if (fs.existsSync(targetPath)) {
-      console.log(`\x1b[32m[Google Drive] 🟢 Google Drive mounted successfully at ${targetPath}!\x1b[0m\n`);
       return true;
     }
   }
 
-  if (fs.existsSync(targetPath)) {
-    return true;
-  }
-
-  console.warn(`\x1b[33m[Google Drive] ⚠️ Google Drive not yet mounted at ${targetPath}.\x1b[0m\n`);
-  return false;
+  return fs.existsSync(targetPath);
 }
